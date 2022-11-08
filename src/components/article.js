@@ -1,6 +1,12 @@
 import React from "react";
-import onlineMediumLogo from "../img/online.png";
-import printMediumLogo from "../img/print.png";
+import onlineMediumLogo from "../img/online-grey.png";
+import printMediumLogo from "../img/print-grey.png";
+import './article.css';
+
+const formatMinutes = (min) => {
+    if(min<10) return `0${min}`;
+    else return min;
+}
 
 export default function Article({article}){
     const uuid = article.uuid;
@@ -8,26 +14,52 @@ export default function Article({article}){
     const lead = article.lead;
     const source = article.source;
     let image = "";
-    let date = "";
-    let links = [];
+    const date = new Date (Date.parse(article.publishDate));
+    const dateString = `Publié le ${date.getDate()}/${date.getMonth()}/${date.getFullYear()} à ${date.getHours()}:${formatMinutes(date.getMinutes())}`;
+    let webLink = "";
+    let pageLinks = [];
     const medium = article.mediumTypeGroup;
     const mediumLogo = medium === "ONLINE" ? onlineMediumLogo : printMediumLogo;
 
+    let articleLink = "";
+
     for(let i = 0; i< article.attachments.length; i++){
-        if(article.attachments[i].type==="Webpage" || article.attachments[i].type==="Page") links.push(article.attachments[i].references[0].href);
+        if(article.attachments[i].type==="Webpage") webLink = article.attachments[i].references[0].href;
         else if(article.attachments[i].type==="Image"){
             if(article.attachments[i].references[0].representation === "ORIGINAL") image = article.attachments[i].references[0].href;
+        }else if(article.attachments[i].type==="Page"){
+            pageLinks.push(article.attachments[i].references[0].href);
+        }
+    }
+
+    if(medium === "ONLINE") articleLink = webLink;
+
+    const articleClickHandler = ({articleLink, medium}) => {
+        if(medium === "ONLINE") window.open(articleLink, '_blank', 'noopener,noreferrer');
+        else{
+            
         }
     }
 
     return (
-        <div key={uuid} className="card" style={{width:"300px"}}>
-            {image && <img className="card-img-top" alt={title} src={image}/>}
-            <div className="card-body">
-                <h5 className="card-title"><img src={mediumLogo} alt={medium} style={{height:"1em"}}/> {title}</h5>
-                <p style={{color:"grey", fontSize:"0.7em", textAlign:"right"}}>{source}</p>
-                <p className="card-text">{lead}</p>
-                {links.map(link=><a href={link} className="btn btn-primary" target="_blank" style={{marginRight:"10px"}}>Lien</a>)}
+        <div key={uuid} className="article" onClick={() => articleClickHandler({articleLink, medium})}>
+            <div className="article-header">
+                <img src={mediumLogo} alt={medium} className="article-medium"/>
+                <span className="article-source">{source}</span>
+            </div>
+            <div className="article-body">
+                <div className="article-body-left">
+                    <h4 className="article-title">{title}</h4>
+                    <p className="article-lead">{lead}</p>
+                </div>
+                {image && (
+                    <div className="article-body-right">
+                        <img className="article-image" src={image} alt={title}/>
+                    </div>
+                )}
+            </div>
+            <div className="article-footer">
+                <span className="article-date">{dateString}</span>
             </div>
         </div>
     );
